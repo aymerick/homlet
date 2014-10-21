@@ -9,8 +9,9 @@ import (
 )
 
 func main() {
-	log.Printf("Cooking Homlet")
+	log.Printf("Cooking Homletd")
 
+	// Init application
 	app := homlet.NewHomlet()
 
 	// @todo FINISH THAT !
@@ -20,5 +21,10 @@ func main() {
 	// Debug hardwares
 	app.Hardwares().Debug()
 
-	log.Printf("Homlet ended")
+	// Start daemon
+	daemon := NewHomletd(app)
+
+	daemon.run()
+
+	log.Printf("Homletd ended")
 }
