@@ -1,6 +1,10 @@
 package homlet_node
 
-import "github.com/aymerick/homlet"
+import (
+	"log"
+
+	"github.com/aymerick/homlet"
+)
 
 type HomletNodeHardware struct {
 	homlet.Hardware
@@ -14,12 +18,10 @@ func NewHomletNodeHardware(name string) *HomletNodeHardware {
 
 // Starts hardware
 func (self *HomletNodeHardware) Start() {
-	// @todo
-	panic("not implemented")
+	log.Printf("[%v] %v > Starting (TODO)", self.Kind(), self.Name())
 }
 
 // Stops hardware
 func (self *HomletNodeHardware) Stop() {
-	// @todo
-	panic("not implemented")
+	log.Printf("[%v] %v > Stopping (TODO)", self.Kind(), self.Name())
 }

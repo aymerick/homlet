@@ -35,7 +35,10 @@ func (self *Homletd) isShuttingDown() bool {
 }
 
 func (self *Homletd) run() {
-	// wait for sigint
+	// start app
+	self.app.Start()
+
+	// wait for signals
 	signal.Notify(self.sigChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGUSR1)
 
 	for !self.isShuttingDown() {
@@ -48,10 +51,17 @@ func (self *Homletd) run() {
 				log.Println("SIGINT or SIGTERM received - Shutdown initiated")
 				self.stop()
 			case syscall.SIGUSR1:
-				log.Println("SIGUSR1 received - TODO")
+				log.Println("SIGUSR1 received - Printing status (TODO)")
+				// Debug hardwares for now
+				self.app.Hardwares().Debug()
 			}
 		}
 	}
+
+	// stop app
+	self.app.Stop()
+
+	log.Println("Shutdown complete")
 }
 
 func (self *Homletd) stop() {

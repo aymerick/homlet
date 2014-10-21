@@ -18,9 +18,6 @@ func main() {
 	app.AddHardware(homlet_node.NewHomletNodeHardware("Jeelink"))
 	app.AddHardware(rfxcom.NewRfxcomHardware("RFXtrx433E"))
 
-	// Debug hardwares
-	app.Hardwares().Debug()
-
 	// Start daemon
 	daemon := NewHomletd(app)
 
