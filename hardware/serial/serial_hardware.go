@@ -16,16 +16,14 @@ type SerialHardware struct {
 	port string
 	baud int
 
-	isStopping bool
 	serialPort io.ReadWriteCloser
 }
 
 func NewSerialHardware(kind string, name string, port string, baud int) *SerialHardware {
 	return &SerialHardware{
-		Hardware:   *homlet.NewHardware(kind, name),
-		port:       port,
-		baud:       baud,
-		isStopping: false,
+		Hardware: *homlet.NewHardware(kind, name),
+		port:     port,
+		baud:     baud,
 	}
 }
 
