@@ -2,6 +2,7 @@ package serial
 
 import (
 	"bufio"
+	"errors"
 	"io"
 	"log"
 	"sync"
@@ -10,6 +11,10 @@ import (
 	"github.com/tarm/goserial"
 )
 
+type SerialProcesserInterface interface {
+	ProcessLine(string)
+}
+
 type SerialHardware struct {
 	homlet.Hardware
 
@@ -17,6 +22,7 @@ type SerialHardware struct {
 	baud int
 
 	serialPort io.ReadWriteCloser
+	processor  SerialProcesserInterface
 }
 
 func NewSerialHardware(kind string, name string, port string, baud int) *SerialHardware {
@@ -35,12 +41,20 @@ func (self *SerialHardware) Baud() int {
 	return self.baud
 }
 
-// Prints debug message
+func (self *SerialHardware) SetProcessor(processor SerialProcesserInterface) {
+	self.processor = processor
+}
+
+/**
+ * HardwareInterface
+ */
+
+// Implements HardwareInterface, overwrites Hardware#Debug
 func (self *SerialHardware) Debug() {
 	log.Printf("[%v] %v on %v at %v bauds", self.Name(), self.Kind(), self.Port(), self.Baud())
 }
 
-// Starts hardware
+// Implements HardwareInterface
 func (self *SerialHardware) Start(wg *sync.WaitGroup) {
 	log.Printf("[%v] %v > Starting (TODO)", self.Name(), self.Kind())
 
@@ -60,8 +74,12 @@ func (self *SerialHardware) Start(wg *sync.WaitGroup) {
 		scanner := bufio.NewScanner(self.serialPort)
 		for scanner.Scan() {
 			txt := scanner.Text()
-			log.Printf(txt)
-			// @todo handle data !
+
+			if self.processor == nil {
+				log.Fatal(errors.New("No processor set to handle incoming data"))
+			}
+
+			self.processor.ProcessLine(txt)
 		}
 
 		if err := scanner.Err(); err != nil {
@@ -70,7 +88,7 @@ func (self *SerialHardware) Start(wg *sync.WaitGroup) {
 	}()
 }
 
-// Stops hardware
+// Implements HardwareInterface
 func (self *SerialHardware) Stop() {
 	// NOP ... serial read is blocking, so no way to do a gracefull shutdown
 }

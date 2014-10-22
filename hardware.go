@@ -25,10 +25,6 @@ type Hardware struct {
 
 type hardwares []HardwareInterface
 
-/**
- * Hardware
- */
-
 func NewHardware(kind string, name string) *Hardware {
 	return &Hardware{
 		kind: kind,
@@ -36,17 +32,17 @@ func NewHardware(kind string, name string) *Hardware {
 	}
 }
 
-// Get hardware kind
+// Implements HardwareInterface
 func (self *Hardware) Kind() string {
 	return self.kind
 }
 
-// Get hardware name
+// Implements HardwareInterface
 func (self *Hardware) Name() string {
 	return self.name
 }
 
-// Prints debug message
+// Implements HardwareInterface
 func (self *Hardware) Debug() {
 	log.Printf("[%v] %v", self.Kind(), self.Name())
 }
