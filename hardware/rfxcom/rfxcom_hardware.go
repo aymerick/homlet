@@ -1,27 +1,13 @@
 package rfxcom
 
-import (
-	"log"
-
-	"github.com/aymerick/homlet"
-)
+import "github.com/aymerick/homlet/hardware/serial"
 
 type RfxcomHardware struct {
-	homlet.Hardware
+	serial.SerialHardware
 }
 
-func NewRfxcomHardware(name string) *RfxcomHardware {
+func NewRfxcomHardware(name string, port string) *RfxcomHardware {
 	return &RfxcomHardware{
-		Hardware: *homlet.NewHardware("rfxcom", name),
+		SerialHardware: *serial.NewSerialHardware("rfxcom", name, port, 4800),
 	}
-}
-
-// Starts hardware
-func (self *RfxcomHardware) Start() {
-	log.Printf("[%v] %v > Starting (TODO)", self.Kind(), self.Name())
-}
-
-// Stops hardware
-func (self *RfxcomHardware) Stop() {
-	log.Printf("[%v] %v > Stopping (TODO)", self.Kind(), self.Name())
 }

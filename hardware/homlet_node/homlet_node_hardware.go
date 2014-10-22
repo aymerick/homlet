@@ -1,27 +1,13 @@
 package homlet_node
 
-import (
-	"log"
-
-	"github.com/aymerick/homlet"
-)
+import "github.com/aymerick/homlet/hardware/serial"
 
 type HomletNodeHardware struct {
-	homlet.Hardware
+	serial.SerialHardware
 }
 
-func NewHomletNodeHardware(name string) *HomletNodeHardware {
+func NewHomletNodeHardware(name string, port string) *HomletNodeHardware {
 	return &HomletNodeHardware{
-		Hardware: *homlet.NewHardware("homlet_node", name),
+		SerialHardware: *serial.NewSerialHardware("homlet_node", name, port, 57600),
 	}
-}
-
-// Starts hardware
-func (self *HomletNodeHardware) Start() {
-	log.Printf("[%v] %v > Starting (TODO)", self.Kind(), self.Name())
-}
-
-// Stops hardware
-func (self *HomletNodeHardware) Stop() {
-	log.Printf("[%v] %v > Stopping (TODO)", self.Kind(), self.Name())
 }

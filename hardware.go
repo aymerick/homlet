@@ -1,6 +1,9 @@
 package homlet
 
-import "log"
+import (
+	"log"
+	"sync"
+)
 
 type HardwareInterface interface {
 	Kind() string
@@ -8,7 +11,7 @@ type HardwareInterface interface {
 
 	Debug()
 
-	Start()
+	Start(wg *sync.WaitGroup)
 	Stop()
 }
 
@@ -16,6 +19,8 @@ type HardwareInterface interface {
 type Hardware struct {
 	kind string
 	name string
+
+	wg *sync.WaitGroup
 }
 
 type hardwares []HardwareInterface
@@ -51,17 +56,20 @@ func (self *Hardware) Debug() {
  */
 
 // Starts all hardwares
-func (col *hardwares) Start() {
+func (col *hardwares) Start(wg *sync.WaitGroup) {
 	for _, hardware := range *col {
-		hardware.Start()
+		hardware.Start(wg)
 	}
 }
 
 // Stops all hardwares
-func (col *hardwares) Stop() {
+func (col *hardwares) Stop(wg *sync.WaitGroup) {
 	for _, hardware := range *col {
 		hardware.Stop()
 	}
+
+	// wait for all hardwares to stop
+	wg.Wait()
 }
 
 // Debugs all hardwares

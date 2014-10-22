@@ -5,7 +5,6 @@ import (
 
 	"github.com/aymerick/homlet"
 	"github.com/aymerick/homlet/hardware/homlet_node"
-	"github.com/aymerick/homlet/hardware/rfxcom"
 )
 
 func main() {
@@ -15,8 +14,11 @@ func main() {
 	app := homlet.NewHomlet()
 
 	// @todo FINISH THAT !
-	app.AddHardware(homlet_node.NewHomletNodeHardware("Jeelink"))
-	app.AddHardware(rfxcom.NewRfxcomHardware("RFXtrx433E"))
+	app.AddHardware(homlet_node.NewHomletNodeHardware("Jeelink", "/dev/tty.usbserial-A1014IM4"))
+	// app.AddHardware(rfxcom.NewRfxcomHardware("RFXtrx433E", "TODO"))
+
+	// debug
+	app.Hardwares().Debug()
 
 	// Start daemon
 	daemon := NewHomletd(app)
