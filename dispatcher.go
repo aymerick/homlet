@@ -24,20 +24,20 @@ func NewDispatcher() *Dispatcher {
 }
 
 // Start Dispatcher
-func (self *Dispatcher) start() {
+func (dispatcher *Dispatcher) start() {
 	go func() {
 		stop := false
 
 		for !stop {
 			select {
-			case <-self.stopChan:
+			case <-dispatcher.stopChan:
 				log.Printf("[Dispatcher] Stop received")
 				stop = true
 
-			case statusMsg := <-self.statusChan:
+			case statusMsg := <-dispatcher.statusChan:
 				log.Printf("[Dispatcher] Status message received (TODO): %v", statusMsg)
 
-			case cmdMsg := <-self.cmdChan:
+			case cmdMsg := <-dispatcher.cmdChan:
 				log.Printf("[Dispatcher] Command message received (TODO): %v", cmdMsg)
 			}
 		}
@@ -45,17 +45,17 @@ func (self *Dispatcher) start() {
 		log.Printf("[Dispatcher] Stopped")
 
 		// ok we are done
-		close(self.stopChan)
+		close(dispatcher.stopChan)
 	}()
 
 	log.Printf("[Dispatcher] Started")
 }
 
 // Stop Dispatcher
-func (self *Dispatcher) stop() {
+func (dispatcher *Dispatcher) stop() {
 	// stop go routine
-	self.stopChan <- true
+	dispatcher.stopChan <- true
 
 	// wait for go routine to end
-	<-self.stopChan
+	<-dispatcher.stopChan
 }

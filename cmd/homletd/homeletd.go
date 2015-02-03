@@ -30,40 +30,40 @@ func NewHomletd(app *homlet.Homlet) *Homletd {
 	}
 }
 
-func (self *Homletd) isShuttingDown() bool {
-	return self.shuttingDown
+func (homletd *Homletd) isShuttingDown() bool {
+	return homletd.shuttingDown
 }
 
-func (self *Homletd) run() {
+func (homletd *Homletd) run() {
 	// start app
-	self.app.Start()
+	homletd.app.Start()
 
 	// wait for signals
-	signal.Notify(self.sigChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGUSR1)
+	signal.Notify(homletd.sigChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP, syscall.SIGUSR1)
 
-	for !self.isShuttingDown() {
+	for !homletd.isShuttingDown() {
 		select {
-		case sig := <-self.sigChan:
+		case sig := <-homletd.sigChan:
 			switch sig {
 			case syscall.SIGHUP:
 				log.Println("SIGHUP - Reload initiated (TODO)")
 			case syscall.SIGINT, syscall.SIGTERM:
 				log.Println("SIGINT or SIGTERM received - Shutdown initiated")
-				self.stop()
+				homletd.stop()
 			case syscall.SIGUSR1:
 				log.Println("SIGUSR1 received - Printing status (TODO)")
 				// Debug hardwares for now
-				self.app.Hardwares().Debug()
+				homletd.app.Hardwares().Debug()
 			}
 		}
 	}
 
 	// stop app
-	self.app.Stop()
+	homletd.app.Stop()
 
 	log.Println("Shutdown complete")
 }
 
-func (self *Homletd) stop() {
-	self.shuttingDown = true
+func (homletd *Homletd) stop() {
+	homletd.shuttingDown = true
 }

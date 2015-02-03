@@ -23,25 +23,25 @@ func NewHomlet() *Homlet {
 	}
 }
 
-func (self *Homlet) Hardwares() *hardwares {
-	return self.hardwares
+func (homlet *Homlet) Hardwares() *hardwares {
+	return homlet.hardwares
 }
 
 // Adds hardware to app
-func (self *Homlet) AddHardware(hardware HardwareInterface) {
-	*self.hardwares = append(*self.Hardwares(), hardware)
+func (homlet *Homlet) AddHardware(hardware HardwareInterface) {
+	*homlet.hardwares = append(*homlet.Hardwares(), hardware)
 }
 
 // Start the engine
-func (self *Homlet) Start() {
-	self.Hardwares().Start(self.hardwaresWG)
+func (homlet *Homlet) Start() {
+	homlet.Hardwares().Start(homlet.hardwaresWG)
 
-	self.dispatcher.start()
+	homlet.dispatcher.start()
 }
 
 // Stop the engine
-func (self *Homlet) Stop() {
-	self.dispatcher.stop()
+func (homlet *Homlet) Stop() {
+	homlet.dispatcher.stop()
 
-	self.Hardwares().Stop(self.hardwaresWG)
+	homlet.Hardwares().Stop(homlet.hardwaresWG)
 }

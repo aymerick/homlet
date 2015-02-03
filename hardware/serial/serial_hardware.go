@@ -8,7 +8,6 @@ import (
 	"sync"
 
 	"github.com/aymerick/homlet"
-	"github.com/tarm/goserial"
 )
 
 type SerialProcesserInterface interface {
@@ -33,16 +32,16 @@ func NewSerialHardware(kind string, name string, port string, baud int) *SerialH
 	}
 }
 
-func (self *SerialHardware) Port() string {
-	return self.port
+func (serial *SerialHardware) Port() string {
+	return serial.port
 }
 
-func (self *SerialHardware) Baud() int {
-	return self.baud
+func (serial *SerialHardware) Baud() int {
+	return serial.baud
 }
 
-func (self *SerialHardware) SetProcessor(processor SerialProcesserInterface) {
-	self.processor = processor
+func (serial *SerialHardware) SetProcessor(processor SerialProcesserInterface) {
+	serial.processor = processor
 }
 
 /**
@@ -50,17 +49,17 @@ func (self *SerialHardware) SetProcessor(processor SerialProcesserInterface) {
  */
 
 // Implements HardwareInterface, overwrites Hardware#Debug
-func (self *SerialHardware) Debug() {
-	log.Printf("[%v] %v on %v at %v bauds", self.Name(), self.Kind(), self.Port(), self.Baud())
+func (serial *SerialHardware) Debug() {
+	log.Printf("[%v] %v on %v at %v bauds", serial.Name(), serial.Kind(), serial.Port(), serial.Baud())
 }
 
 // Implements HardwareInterface
-func (self *SerialHardware) Start(wg *sync.WaitGroup) {
-	log.Printf("[%v] %v > Starting (TODO)", self.Name(), self.Kind())
+func (serial *SerialHardware) Start(wg *sync.WaitGroup) {
+	log.Printf("[%v] %v > Starting (TODO)", serial.Name(), serial.Kind())
 
 	var err error
 
-	self.serialPort, err = serial.OpenPort(&serial.Config{Name: self.Port(), Baud: self.Baud()})
+	serial.serialPort, err = serial.OpenPort(&serial.Config{Name: serial.Port(), Baud: serial.Baud()})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -69,17 +68,18 @@ func (self *SerialHardware) Start(wg *sync.WaitGroup) {
 	// wg.Add(1)
 
 	go func() {
+		// NOTE: serial read is blocking, so no way to do a gracefull shutdown
 		// defer wg.Done()
 
-		scanner := bufio.NewScanner(self.serialPort)
+		scanner := bufio.NewScanner(serial.serialPort)
 		for scanner.Scan() {
 			txt := scanner.Text()
 
-			if self.processor == nil {
+			if serial.processor == nil {
 				log.Fatal(errors.New("No processor set to handle incoming data"))
 			}
 
-			self.processor.ProcessLine(txt)
+			serial.processor.ProcessLine(txt)
 		}
 
 		if err := scanner.Err(); err != nil {
@@ -89,6 +89,6 @@ func (self *SerialHardware) Start(wg *sync.WaitGroup) {
 }
 
 // Implements HardwareInterface
-func (self *SerialHardware) Stop() {
-	// NOP ... serial read is blocking, so no way to do a gracefull shutdown
+func (serial *SerialHardware) Stop() {
+	// NOOP ... serial read is blocking, so no way to do a gracefull shutdown
 }

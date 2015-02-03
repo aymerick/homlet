@@ -21,6 +21,6 @@ func NewHomletNodeHardware(name string, port string) *HomletNodeHardware {
 }
 
 // Implements SerialProcesserInterface
-func (self *HomletNodeHardware) ProcessLine(line string) {
+func (node *HomletNodeHardware) ProcessLine(line string) {
 	log.Printf("homlet_node > %v", line)
 }

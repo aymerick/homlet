@@ -33,18 +33,18 @@ func NewHardware(kind string, name string) *Hardware {
 }
 
 // Implements HardwareInterface
-func (self *Hardware) Kind() string {
-	return self.kind
+func (hardware *Hardware) Kind() string {
+	return hardware.kind
 }
 
 // Implements HardwareInterface
-func (self *Hardware) Name() string {
-	return self.name
+func (hardware *Hardware) Name() string {
+	return hardware.name
 }
 
 // Implements HardwareInterface
-func (self *Hardware) Debug() {
-	log.Printf("[%v] %v", self.Kind(), self.Name())
+func (hardware *Hardware) Debug() {
+	log.Printf("[%v] %v", hardware.Kind(), hardware.Name())
 }
 
 /**
