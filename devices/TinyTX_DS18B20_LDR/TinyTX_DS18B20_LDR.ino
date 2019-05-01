@@ -17,11 +17,11 @@
 ISR(WDT_vect) { Sleepy::watchdogEvent(); }
 
 
-// Node kind
-#define NODE_KIND 5
+// Device kind
+#define DEVICE_KIND 5
 
-// RF12 node ID in the range 1-30
-#define myNodeID 27
+// RF12 device ID in the range 1-30
+#define myDeviceID 27 // CHANGE ME
 
 // RF12 Network group
 #define network 212
@@ -62,7 +62,7 @@ ISR(WDT_vect) { Sleepy::watchdogEvent(); }
 
 // serialized payload
 struct {
-  byte kind     :7;  // Node kind
+  byte kind     :7;  // Device kind
   byte reserved :1;  // Reserved for future use. Must be zero.
   // data
   int  temp     :10; // Temperature: -512..+512 (tenths)
@@ -82,14 +82,14 @@ static byte waitForAck() {
 
   while (!ackTimer.poll(ACK_TIME)) {
     // see http://talk.jeelabs.net/topic/811#post-4712
-    if (rf12_recvDone() && (rf12_crc == 0) && (rf12_hdr == (RF12_HDR_DST | RF12_HDR_CTL | myNodeID)))
+    if (rf12_recvDone() && (rf12_crc == 0) && (rf12_hdr == (RF12_HDR_DST | RF12_HDR_CTL | myDeviceID)))
       return 1;
   }
 
   return 0;
 }
 
-// send payload and wait for master node ack
+// send payload and wait for ack
 static void sendPayload(){
   for (byte i = 0; i <= ACK_RETRY_LIMIT; i++) {
     // power up RF
@@ -206,7 +206,7 @@ void readLDR() {
 
 void setup() {
   // initialize RFM12
-  rf12_initialize(myNodeID, freq, network);
+  rf12_initialize(myDeviceID, freq, network);
 
   // power down RF
   rf12_sleep(0);
@@ -225,7 +225,7 @@ void setup() {
 
   // init payload
   payload.reserved = 0;
-  payload.kind = NODE_KIND;
+  payload.kind = DEVICE_KIND;
 }
 
 void loop() {

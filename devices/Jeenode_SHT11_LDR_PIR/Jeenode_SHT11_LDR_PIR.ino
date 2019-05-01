@@ -23,8 +23,8 @@ ISR(WDT_vect) { Sleepy::watchdogEvent(); }
 #define DEBUG 0
 #define NOOP  0
 
-// Node kind
-#define NODE_KIND 1
+// Device kind
+#define DEVICE_KIND 1
 
 // defined if SHT11 is connected to a port
 #define SHT11_PORT 1
@@ -70,12 +70,11 @@ Scheduler scheduler (schedbuf, TASK_END);
 // count up until next report, i.e. packet send
 static byte reportCount;
 
-// node ID used for this unit
-static byte myNodeID;
+static byte myDeviceID;
 
 // serialized payload
 struct {
-  byte kind     :7;  // Node kind
+  byte kind     :7;  // Device kind
   byte reserved :1;  // Reserved for future use. Must be zero.
   // data
   int  temp     :10; // Temperature: -500..+500 (tenths)
@@ -148,7 +147,7 @@ static byte waitForAck() {
 
   while (!ackTimer.poll(ACK_TIME)) {
     // see http://talk.jeelabs.net/topic/811#post-4712
-    if (rf12_recvDone() && (rf12_crc == 0) && (rf12_hdr == (RF12_HDR_DST | RF12_HDR_CTL | myNodeID)))
+    if (rf12_recvDone() && (rf12_crc == 0) && (rf12_hdr == (RF12_HDR_DST | RF12_HDR_CTL | myDeviceID)))
       return 1;
 
     set_sleep_mode(SLEEP_MODE_IDLE);
@@ -158,7 +157,7 @@ static byte waitForAck() {
   return 0;
 }
 
-// send payload and wait for master node ack
+// send payload and wait for ack
 static void sendPayload() {
   for (byte i = 0; i < ACK_RETRY_LIMIT; i++) {
     // power up RF
@@ -277,11 +276,11 @@ static void readSensors() {
 void setup() {
 #if DEBUG
   Serial.begin(57600);
-  myNodeID = rf12_config();
+  myDeviceID = rf12_config();
   serialFlush();
 #else
   // don't report info on the serial port
-  myNodeID = rf12_config(0);
+  myDeviceID = rf12_config(0);
 #endif
 
   // power down
@@ -296,7 +295,7 @@ void setup() {
 
   // init payload
   payload.reserved = 0;
-  payload.kind = NODE_KIND;
+  payload.kind = DEVICE_KIND;
 
   // report right away for easy debugging
   reportCount = REPORT_EVERY;

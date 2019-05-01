@@ -19,8 +19,8 @@ ISR(WDT_vect) { Sleepy::watchdogEvent(); }
 #define DEBUG 0
 #define NOOP 0
 
-// Node kind
-#define NODE_KIND 2
+// Device kind
+#define DEVICE_KIND 2
 
 // DHT22 Power wire is plugged into jeenode DI03 (arduino: digital 6)
 #define DHT22_POWER_PIN 6
@@ -48,11 +48,11 @@ ISR(WDT_vect) { Sleepy::watchdogEvent(); }
 #define ACK_RETRY_LIMIT 5
 
 
-static byte myNodeID;
+static byte myDeviceID;
 
 // serialized payload
 struct {
-  byte kind     :7;  // Node kind
+  byte kind     :7;  // Device kind
   byte reserved :1;  // Reserved for future use. Must be zero.
   // data
   int  temp     :10; // Temperature: -512..+512 (tenths)
@@ -85,14 +85,14 @@ static byte waitForAck() {
 
   while (!ackTimer.poll(ACK_TIME)) {
     // see http://talk.jeelabs.net/topic/811#post-4712
-    if (rf12_recvDone() && (rf12_crc == 0) && (rf12_hdr == (RF12_HDR_DST | RF12_HDR_CTL | myNodeID)))
+    if (rf12_recvDone() && (rf12_crc == 0) && (rf12_hdr == (RF12_HDR_DST | RF12_HDR_CTL | myDeviceID)))
       return 1;
   }
 
   return 0;
 }
 
-// send payload and wait for master node ack
+// send payload and wait for ack
 static void sendPayload() {
   for (byte i = 0; i < ACK_RETRY_LIMIT; i++) {
     // power up RF
@@ -240,11 +240,11 @@ void readDHT22() {
 void setup() {
 #if DEBUG
   Serial.begin(57600);
-  myNodeID = rf12_config();
+  myDeviceID = rf12_config();
   serialFlush();
 #else
   // don't report info on the serial port
-  myNodeID = rf12_config(0);
+  myDeviceID = rf12_config(0);
 #endif
 
   // power down RF
@@ -255,7 +255,7 @@ void setup() {
 
   // init payload
   payload.reserved = 0;
-  payload.kind = NODE_KIND;
+  payload.kind = DEVICE_KIND;
 }
 
 void loop() {
