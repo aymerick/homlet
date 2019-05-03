@@ -158,7 +158,8 @@ func (p *Packet) setValue(sensor Sensor, val uint64) error {
 	return nil
 }
 
-func (p *Packet) getValueStr(sensor Sensor) string {
+// Value returns string representation of sensor value
+func (p *Packet) Value(sensor Sensor) string {
 	switch sensor {
 	case Temperature:
 		return fmt.Sprintf("%.1f°", p.Temperature)
@@ -176,6 +177,19 @@ func (p *Packet) getValueStr(sensor Sensor) string {
 	return "??"
 }
 
+// Values returns string representation of all sensor values
+func (p *Packet) Values() []string {
+	result := make([]string, len(Sensors))
+
+	for i, sensor := range Sensors {
+		if p.Device.hasSensor(sensor) {
+			result[i] = p.Value(sensor)
+		}
+	}
+
+	return result
+}
+
 // String implements stringer
 func (p *Packet) String() string {
 	result := fmt.Sprintf("[%d][%s] ", p.DeviceID, p.Device)
@@ -183,7 +197,7 @@ func (p *Packet) String() string {
 		if i > 0 {
 			result += ", "
 		}
-		result += fmt.Sprintf("%s: %s", sensor, p.getValueStr(sensor))
+		result += fmt.Sprintf("%s: %s", sensor, p.Value(sensor))
 	}
 	return result
 }

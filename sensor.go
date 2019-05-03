@@ -15,6 +15,11 @@ const (
 	VCC // Supply voltage
 )
 
+// Sensors holds all sensors
+var Sensors = []Sensor{
+	Temperature, Humidity, Light, Motion, LowBattery, VCC,
+}
+
 var sensorBits = map[Sensor]int{
 	Temperature: 10, // [10 bits] Temperature: -512..+512 (tenths)
 	Humidity:    7,  //  [7 bits] Humidity: 0..100
