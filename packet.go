@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
@@ -13,8 +14,9 @@ var errLineFormat = errors.New("erroneous line received")
 
 // Packet received from a device
 type Packet struct {
-	DeviceID int
+	At       time.Time
 	Device   Device
+	DeviceID int
 
 	// sensors
 	Temperature float64
@@ -52,7 +54,9 @@ type Packet struct {
 func Parse(line string) (*Packet, error) {
 	log.Debugf("line: %s", line)
 
-	result := &Packet{}
+	result := &Packet{
+		At: time.Now(),
+	}
 
 	// split line
 	ary := strings.Split(strings.TrimSpace(line), " ")
@@ -158,7 +162,7 @@ func (p *Packet) setValue(sensor Sensor, val uint64) error {
 	return nil
 }
 
-// Value returns string representation of sensor value
+// Value returns string representation of sensor value with unit
 func (p *Packet) Value(sensor Sensor) string {
 	switch sensor {
 	case Temperature:
@@ -177,12 +181,12 @@ func (p *Packet) Value(sensor Sensor) string {
 	return "??"
 }
 
-// Values returns string representation of all sensor values
+// Values returns string representations of all sensor values
 func (p *Packet) Values() []string {
 	result := make([]string, len(Sensors))
 
 	for i, sensor := range Sensors {
-		if p.Device.hasSensor(sensor) {
+		if p.Device.HaveSensor(sensor) {
 			result[i] = p.Value(sensor)
 		}
 	}

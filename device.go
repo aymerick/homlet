@@ -52,7 +52,8 @@ func (d Device) dataLength() int {
 	return deviceDataLength[d]
 }
 
-func (d Device) hasSensor(sensor Sensor) bool {
+// HasSensor returns true if device have given sensor
+func (d Device) HaveSensor(sensor Sensor) bool {
 	for _, s := range d.sensors() {
 		if s == sensor {
 			return true

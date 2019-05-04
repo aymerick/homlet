@@ -8,6 +8,7 @@ import (
 	"github.com/gizak/termui/v3"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 var termCmd = &cobra.Command{
@@ -28,7 +29,7 @@ func runTerm(cmd *cobra.Command, args []string) {
 	defer termui.Close()
 
 	// init hardware
-	hdw, err := homlet.Open("/dev/tty.usbserial-A1014IM4")
+	hdw, err := homlet.Open(viper.GetString("serial"))
 	if err != nil {
 		log.Fatalf("Failed to open serial connection: %v", err)
 	}
@@ -37,25 +38,15 @@ func runTerm(cmd *cobra.Command, args []string) {
 	// do not mess UI with log messages
 	log.SetOutput(ioutil.Discard)
 
+	// get devices settings
+	settings, err := homlet.DevicesSettings()
+	if err != nil {
+		log.Fatalf("Failed to fetch devices settings: %v", err)
+	}
+
+	// read packets
+	packets := hdw.ReadPackets()
+
 	// run UI
-	term.NewUI(readPackets(hdw)).Run()
-}
-
-func readPackets(hdw *homlet.Hardware) chan *homlet.Packet {
-	result := make(chan *homlet.Packet)
-
-	go func(hdw *homlet.Hardware, c chan *homlet.Packet) {
-		for {
-			packet, err := hdw.Read()
-			if err != nil {
-				log.Errorf("Failed to read data: %s", err)
-				close(c)
-				return
-			}
-
-			c <- packet
-		}
-	}(hdw, result)
-
-	return result
+	term.NewUI(packets, settings).Run()
 }

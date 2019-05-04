@@ -4,6 +4,7 @@ import (
 	"io"
 
 	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 	"github.com/tarm/serial"
 )
 
@@ -17,6 +18,7 @@ type Hardware struct {
 	ser io.ReadWriteCloser
 }
 
+// Open instanciates and initializes hardware
 func Open(path string) (*Hardware, error) {
 	config := &serial.Config{Name: path, Baud: BAUD}
 	ser, err := serial.OpenPort(config)
@@ -28,10 +30,12 @@ func Open(path string) (*Hardware, error) {
 	return &result, nil
 }
 
+// Close stops hardware
 func (hdw *Hardware) Close() {
 	hdw.ser.Close()
 }
 
+// Read returns a packet
 func (hdw *Hardware) Read() (*Packet, error) {
 	for {
 		line := []byte{}
@@ -59,4 +63,24 @@ func (hdw *Hardware) Read() (*Packet, error) {
 
 		return packet, err
 	}
+}
+
+// ReadPackets read packets and send them to returned channel
+func (hdw *Hardware) ReadPackets() chan *Packet {
+	result := make(chan *Packet)
+
+	go func(hdw *Hardware, c chan *Packet) {
+		for {
+			packet, err := hdw.Read()
+			if err != nil {
+				log.Errorf("Failed to read data: %s", err)
+				close(c)
+				return
+			}
+
+			c <- packet
+		}
+	}(hdw, result)
+
+	return result
 }

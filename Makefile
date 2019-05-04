@@ -13,7 +13,7 @@ gen: ; $(info $(M) Generating files)
 clean: ; $(info $(M) Cleaning)
 	rm -f homlet
 
-test: gen clean ; $(info $(M) Launching tests)
+test: clean ; $(info $(M) Launching tests)
 	go test $(TEST_FLAGS) ./...
 
 fmt: ; $(info $(M) Formatting code)
@@ -22,10 +22,10 @@ fmt: ; $(info $(M) Formatting code)
 lint: ; $(info $(M) Linting)
 	golangci-lint run
 
-build: gen clean ; $(info $(M) Building)
+build: clean ; $(info $(M) Building)
 	go build -ldflags "$(shell govvv -flags -pkg $(shell go list ./pkg/version)) -s -w" ./cmd/homlet
 
-rpi: gen clean ; $(info $(M) Building raspberry pi binary)
+rpi: clean ; $(info $(M) Building raspberry pi binary)
 	GOOS=linux GOARCH=arm GOARM=5 go build -ldflags "$(shell govvv -flags -pkg $(shell go list ./pkg/version)) -s -w" ./cmd/homlet
 
-release: lint build
+release: gen lint build
