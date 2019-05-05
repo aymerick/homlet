@@ -38,7 +38,9 @@ func (s *Server) Run() {
 
 		// send to domoticz
 		if s.domoticz != nil {
-			s.domoticz.Push(packet, s.deviceSettings(packet.DeviceID))
+			if err := s.domoticz.Push(packet, s.deviceSettings(packet.DeviceID)); err != nil {
+				log.WithError(err).Error("Failed to push packet to domoticz")
+			}
 		}
 
 		// FIXME send to influxdb

@@ -39,7 +39,7 @@ func runTerm(cmd *cobra.Command, args []string) {
 	log.SetOutput(ioutil.Discard)
 
 	// get devices settings
-	settings, err := homlet.DevicesSettings()
+	settings, err := devicesSettings()
 	if err != nil {
 		log.Fatalf("Failed to fetch devices settings: %v", err)
 	}

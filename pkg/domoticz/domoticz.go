@@ -1,4 +1,4 @@
-// Package domoticz implements a domoticz output
+// Package domoticz outputs packets to a domoticz instance
 //
 // Documentation:
 //   https://www.domoticz.com/wiki/Domoticz_API/JSON_URL's
@@ -36,7 +36,6 @@ func (h *Handler) Push(packet *homlet.Packet, settings *homlet.DeviceSettings) e
 	// FIXME check if domoticz support a POST instead
 	resp, err := http.Get(url)
 	if err != nil {
-		log.WithError(err).Error("Failed to push packet to domoticz")
 		return err
 	}
 
@@ -46,7 +45,6 @@ func (h *Handler) Push(packet *homlet.Packet, settings *homlet.DeviceSettings) e
 	if err != nil {
 		log.Warn("Failed to get domoticz response")
 	} else {
-		log.Info("Packet pushed to domoticz")
 		log.Debugf("Domoticz response: %s", respText)
 	}
 

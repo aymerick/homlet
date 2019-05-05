@@ -28,7 +28,7 @@ func runServer(cmd *cobra.Command, args []string) {
 	defer hdw.Close()
 
 	// get devices settings
-	settings, err := homlet.DevicesSettings()
+	settings, err := devicesSettings()
 	if err != nil {
 		log.Fatalf("Failed to fetch devices settings: %v", err)
 	}

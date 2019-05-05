@@ -1,0 +1,33 @@
+# log levels: debug | info | warn | error
+loglevel = "debug"
+
+[domoticz]
+  url = "http://<USER>:<PASSWORD>@<HOSTNAME>:8080"
+  hardwareID = 3 # dummy hardware idx
+
+# sensor names: temperature | humidity | light | motion | low_battery | vcc
+[[devices]]
+  id = 2
+  room = "kitchen"
+  domoticz = 2 # virtual device idx
+
+  [[devices.sensors]]
+    name = "temperature"
+    correction = -0.2
+
+  [[devices.sensors]]
+    name = "humidity"
+    correction = -3
+
+  [[devices.sensors]]
+    name = "light"
+    correction = -1
+
+[[devices]]
+  id = 3
+  room = "living_room"
+  domoticz = 3 # virtual device idx
+
+  [[devices.sensors]]
+    name = "light"
+    disable = true
