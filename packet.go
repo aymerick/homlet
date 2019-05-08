@@ -14,9 +14,11 @@ var errLineFormat = errors.New("erroneous line received")
 
 // Packet received from a device
 type Packet struct {
-	At       time.Time
-	Device   Device
-	DeviceID int
+	At          time.Time
+	Corrections map[Sensor]float64
+	Device      Device
+	DeviceID    int
+	Disabled    map[Sensor]bool
 
 	// sensors
 	Temperature float64
@@ -55,7 +57,9 @@ func Parse(line string) (*Packet, error) {
 	log.Debugf("line: %s", line)
 
 	result := &Packet{
-		At: time.Now(),
+		At:          time.Now(),
+		Corrections: map[Sensor]float64{},
+		Disabled:    map[Sensor]bool{},
 	}
 
 	// split line
@@ -104,6 +108,103 @@ func Parse(line string) (*Packet, error) {
 	}
 
 	return result, nil
+}
+
+// ApplySettings corrects sensors values and disables sensors
+func (p *Packet) ApplySettings(settings *DeviceSettings) error {
+	for _, s := range settings.Sensors {
+		sensor, err := SensorString(s.Name)
+		if err != nil {
+			return errors.Wrap(err, "unexpected sensor name")
+		}
+
+		if s.Correction != 0 {
+			p.Corrections[sensor] = s.Correction
+
+			prevValue := p.HumanizeValue(sensor)
+			if err := p.correctValue(sensor, s.Correction); err != nil {
+				return err
+			}
+			log.Debugf("Corrected %s value from '%s' to '%s'", sensor, prevValue, p.HumanizeValue(sensor))
+		}
+
+		if s.Disable {
+			p.Disabled[sensor] = true
+		}
+	}
+	return nil
+}
+
+// HasSensor returns true if packet have given sensor data
+func (p *Packet) HaveSensor(sensor Sensor) bool {
+	return p.Device.haveSensor(sensor) && !p.Disabled[sensor]
+}
+
+// Value returns humanized representation of sensor value with unit
+func (p *Packet) HumanizeValue(sensor Sensor) string {
+	switch sensor {
+	case Temperature:
+		return fmt.Sprintf("%.1f°", p.Temperature)
+	case Humidity:
+		return fmt.Sprintf("%d%%", p.Humidity)
+	case Light:
+		return fmt.Sprintf("%d%%", p.Light)
+	case Motion:
+		return fmt.Sprintf("%t", p.Motion)
+	case LowBattery:
+		return fmt.Sprintf("%t", p.LowBattery)
+	case VCC:
+		return fmt.Sprintf("%dmV", p.VCC)
+	}
+	return "??"
+}
+
+// Values returns humanized representations of all sensors values
+func (p *Packet) HumanizeValues() []string {
+	result := make([]string, len(Sensors))
+
+	for i, sensor := range Sensors {
+		if p.Device.haveSensor(sensor) {
+			result[i] = p.HumanizeValue(sensor)
+		}
+	}
+
+	return result
+}
+
+// HumidityStatus returns humidity status
+func (p *Packet) HumidityStatus() HumidityStatus {
+	if p.HaveSensor(Humidity) {
+		if p.HaveSensor(Temperature) {
+			if p.Temperature >= 20 && p.Temperature <= 25 &&
+				p.Humidity >= 40 && p.Humidity <= 70 {
+				// Comfortable if temperature is between 20-25°C and humidity between 40-70%
+				return HumidityComfortable
+			}
+		}
+
+		if p.Humidity < 40 {
+			return HumidityDry
+		}
+
+		if p.Humidity > 70 {
+			return HumidityWet
+		}
+	}
+
+	return HumidityNormal
+}
+
+// String implements stringer
+func (p *Packet) String() string {
+	result := fmt.Sprintf("[%d][%s] ", p.DeviceID, p.Device)
+	for i, sensor := range p.Device.sensors() {
+		if i > 0 {
+			result += ", "
+		}
+		result += fmt.Sprintf("%s: %s", sensor, p.HumanizeValue(sensor))
+	}
+	return result
 }
 
 func (p *Packet) setData(data []byte) error {
@@ -157,53 +258,37 @@ func (p *Packet) setValue(sensor Sensor, val uint64) error {
 	case VCC:
 		p.VCC = sensor.vcc(val)
 	default:
-		return fmt.Errorf("unexpected sensor %s", sensor)
+		return fmt.Errorf("unexpected sensor '%s'", sensor)
 	}
 	return nil
 }
 
-// Value returns string representation of sensor value with unit
-func (p *Packet) Value(sensor Sensor) string {
+func (p *Packet) correctValue(sensor Sensor, correction float64) error {
 	switch sensor {
 	case Temperature:
-		return fmt.Sprintf("%.1f°", p.Temperature)
+		p.Temperature += correction
 	case Humidity:
-		return fmt.Sprintf("%d%%", p.Humidity)
+		val := float64(p.Humidity) + correction
+		if val < 0 {
+			val = 0
+		}
+		p.Humidity = uint8(val)
 	case Light:
-		return fmt.Sprintf("%d%%", p.Light)
-	case Motion:
-		return fmt.Sprintf("%t", p.Motion)
-	case LowBattery:
-		return fmt.Sprintf("%t", p.LowBattery)
+		val := float64(p.Light) + correction
+		if val < 0 {
+			val = 0
+		}
+		p.Light = uint8(val)
 	case VCC:
-		return fmt.Sprintf("%dmV", p.VCC)
-	}
-	return "??"
-}
-
-// Values returns string representations of all sensor values
-func (p *Packet) Values() []string {
-	result := make([]string, len(Sensors))
-
-	for i, sensor := range Sensors {
-		if p.Device.HaveSensor(sensor) {
-			result[i] = p.Value(sensor)
+		val := float64(p.VCC) + correction
+		if val < 0 {
+			val = 0
 		}
+		p.VCC = uint(val)
+	default:
+		return fmt.Errorf("unexpected correction for sensor '%s'", sensor)
 	}
-
-	return result
-}
-
-// String implements stringer
-func (p *Packet) String() string {
-	result := fmt.Sprintf("[%d][%s] ", p.DeviceID, p.Device)
-	for i, sensor := range p.Device.sensors() {
-		if i > 0 {
-			result += ", "
-		}
-		result += fmt.Sprintf("%s: %s", sensor, p.Value(sensor))
-	}
-	return result
+	return nil
 }
 
 func byteFor(val string) (byte, error) {

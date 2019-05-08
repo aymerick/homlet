@@ -26,6 +26,14 @@ To build a raspberry binary:
 $ make rpi
 ```
 
+## Terminal UI
+
+Display all devices directly on you prefered terminal:
+
+```
+$ homlet term
+```
+
 ## Server
 
 Install homlet binary:

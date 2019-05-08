@@ -25,7 +25,7 @@ func (h *Handler) Push(packet *homlet.Packet, settings *homlet.DeviceSettings) e
 		return nil
 	}
 
-	if !packet.Device.HaveSensor(homlet.Temperature) && !packet.Device.HaveSensor(homlet.Humidity) {
+	if !packet.HaveSensor(homlet.Temperature) && !packet.HaveSensor(homlet.Humidity) {
 		return nil
 	}
 
@@ -52,12 +52,28 @@ func (h *Handler) Push(packet *homlet.Packet, settings *homlet.DeviceSettings) e
 }
 
 func (h *Handler) paramsForPacket(packet *homlet.Packet) string {
-	if packet.Device.HaveSensor(homlet.Temperature) && packet.Device.HaveSensor(homlet.Humidity) {
-		return fmt.Sprintf("nvalue=0&svalue=%.1f;%d;0", packet.Temperature, packet.Humidity)
-	} else if packet.Device.HaveSensor(homlet.Temperature) {
+	hasTemp := packet.HaveSensor(homlet.Temperature)
+	hasHumi := packet.HaveSensor(homlet.Humidity)
+
+	if hasTemp && hasHumi {
+		return fmt.Sprintf("nvalue=0&svalue=%.1f;%d;%d", packet.Temperature, packet.Humidity, humidityStatus(packet.HumidityStatus()))
+	} else if hasTemp {
 		return fmt.Sprintf("nvalue=0&svalue=%.1f", packet.Temperature)
-	} else if packet.Device.HaveSensor(homlet.Humidity) {
-		return fmt.Sprintf("nvalue=%d&svalue=0", packet.Humidity)
+	} else if hasHumi {
+		return fmt.Sprintf("nvalue=%d&svalue=%d", packet.Humidity, humidityStatus(packet.HumidityStatus()))
 	}
 	return ""
+}
+
+func humidityStatus(status homlet.HumidityStatus) int {
+	switch status {
+	case homlet.HumidityComfortable:
+		return 1
+	case homlet.HumidityDry:
+		return 2
+	case homlet.HumidityWet:
+		return 3
+	}
+	// Normal
+	return 0
 }

@@ -109,7 +109,7 @@ func (ui *UI) makeFields(packet *homlet.Packet) []string {
 		room = settings.Room
 	}
 
-	values := packet.Values()
+	values := packet.HumanizeValues()
 	result := make([]string, len(values)+4)
 	result[0] = fmt.Sprintf("%d", packet.DeviceID)
 	result[1] = room

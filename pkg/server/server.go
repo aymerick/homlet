@@ -34,11 +34,20 @@ func (s *Server) Run() {
 			return
 		}
 
-		log.Infof("Packet received: %s", packet)
+		settings := s.deviceSettings(packet.DeviceID)
+
+		// log
+		log.Infof("Received: [%s]%s", settings.Room, packet)
+
+		// correct values and disable sensors
+		if err := packet.ApplySettings(settings); err != nil {
+			log.WithError(err).Error("Failed to set settings to packet")
+			continue
+		}
 
 		// send to domoticz
 		if s.domoticz != nil {
-			if err := s.domoticz.Push(packet, s.deviceSettings(packet.DeviceID)); err != nil {
+			if err := s.domoticz.Push(packet, settings); err != nil {
 				log.WithError(err).Error("Failed to push packet to domoticz")
 			}
 		}
