@@ -9,11 +9,11 @@ loglevel = "debug"
 [[devices]]
   id = 2
   room = "kitchen"
-  domoticz = 2 # virtual device idx
 
   [[devices.sensors]]
     name = "temperature"
     correction = -0.2
+    domoticz = 2 # virtual device idx for temperature and humidity
 
   [[devices.sensors]]
     name = "humidity"
@@ -22,12 +22,16 @@ loglevel = "debug"
   [[devices.sensors]]
     name = "light"
     correction = -1
+    domoticz = 3 # virtual device idx
 
 [[devices]]
   id = 3
   room = "living_room"
-  domoticz = 3 # virtual device idx
+
+  [[devices.sensors]]
+    name = "temperature"
+    domoticz = 4 # virtual device idx for temperature only
 
   [[devices.sensors]]
     name = "light"
-    disable = true
+    disable = true # disable that sensor

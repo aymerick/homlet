@@ -28,6 +28,15 @@ var _DeviceNameToValueMap = map[string]Device{
 	_DeviceName[47:56]: 5,
 }
 
+var _DeviceNames = []string{
+	_DeviceName[0:7],
+	_DeviceName[7:19],
+	_DeviceName[19:30],
+	_DeviceName[30:38],
+	_DeviceName[38:47],
+	_DeviceName[47:56],
+}
+
 // DeviceString retrieves an enum value from the enum constants string name.
 // Throws an error if the param is not part of the enum.
 func DeviceString(s string) (Device, error) {
@@ -40,6 +49,13 @@ func DeviceString(s string) (Device, error) {
 // DeviceValues returns all values of the enum
 func DeviceValues() []Device {
 	return _DeviceValues
+}
+
+// DeviceStrings returns a slice of all String values of the enum
+func DeviceStrings() []string {
+	strs := make([]string, len(_DeviceNames))
+	copy(strs, _DeviceNames)
+	return strs
 }
 
 // IsADevice returns "true" if the value is listed in the enum definition. "false" otherwise

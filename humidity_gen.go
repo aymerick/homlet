@@ -26,6 +26,13 @@ var _HumidityStatusNameToValueMap = map[string]HumidityStatus{
 	_HumidityStatusName[20:23]: 3,
 }
 
+var _HumidityStatusNames = []string{
+	_HumidityStatusName[0:6],
+	_HumidityStatusName[6:17],
+	_HumidityStatusName[17:20],
+	_HumidityStatusName[20:23],
+}
+
 // HumidityStatusString retrieves an enum value from the enum constants string name.
 // Throws an error if the param is not part of the enum.
 func HumidityStatusString(s string) (HumidityStatus, error) {
@@ -38,6 +45,13 @@ func HumidityStatusString(s string) (HumidityStatus, error) {
 // HumidityStatusValues returns all values of the enum
 func HumidityStatusValues() []HumidityStatus {
 	return _HumidityStatusValues
+}
+
+// HumidityStatusStrings returns a slice of all String values of the enum
+func HumidityStatusStrings() []string {
+	strs := make([]string, len(_HumidityStatusNames))
+	copy(strs, _HumidityStatusNames)
+	return strs
 }
 
 // IsAHumidityStatus returns "true" if the value is listed in the enum definition. "false" otherwise

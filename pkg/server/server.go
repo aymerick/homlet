@@ -46,7 +46,7 @@ func (s *Server) Run() {
 		}
 
 		// send to domoticz
-		if s.domoticz != nil {
+		if (s.domoticz != nil) && (settings != nil) {
 			if err := s.domoticz.Push(packet, settings); err != nil {
 				log.WithError(err).Error("Failed to push packet to domoticz")
 			}

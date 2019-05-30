@@ -29,6 +29,15 @@ var _SensorNameToValueMap = map[string]Sensor{
 	_SensorName[41:44]: 6,
 }
 
+var _SensorNames = []string{
+	_SensorName[0:11],
+	_SensorName[11:19],
+	_SensorName[19:24],
+	_SensorName[24:30],
+	_SensorName[30:41],
+	_SensorName[41:44],
+}
+
 // SensorString retrieves an enum value from the enum constants string name.
 // Throws an error if the param is not part of the enum.
 func SensorString(s string) (Sensor, error) {
@@ -41,6 +50,13 @@ func SensorString(s string) (Sensor, error) {
 // SensorValues returns all values of the enum
 func SensorValues() []Sensor {
 	return _SensorValues
+}
+
+// SensorStrings returns a slice of all String values of the enum
+func SensorStrings() []string {
+	strs := make([]string, len(_SensorNames))
+	copy(strs, _SensorNames)
+	return strs
 }
 
 // IsASensor returns "true" if the value is listed in the enum definition. "false" otherwise

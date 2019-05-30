@@ -27,6 +27,9 @@ type Packet struct {
 	Motion      bool
 	LowBattery  bool
 	VCC         uint
+
+	// private
+	sensors []Sensor
 }
 
 // Parse a line produce by RF12Demo sketch
@@ -137,7 +140,12 @@ func (p *Packet) ApplySettings(settings *DeviceSettings) error {
 
 // HasSensor returns true if packet have given sensor data
 func (p *Packet) HaveSensor(sensor Sensor) bool {
-	return p.Device.haveSensor(sensor) && !p.Disabled[sensor]
+	for _, s := range p.Sensors() {
+		if s == sensor {
+			return true
+		}
+	}
+	return false
 }
 
 // Value returns humanized representation of sensor value with unit
@@ -193,6 +201,19 @@ func (p *Packet) HumidityStatus() HumidityStatus {
 	}
 
 	return HumidityNormal
+}
+
+// Sensors returns all packet sensors
+func (p *Packet) Sensors() []Sensor {
+	if p.sensors == nil {
+		p.sensors = []Sensor{}
+		for _, sensor := range p.Device.sensors() {
+			if !p.Disabled[sensor] {
+				p.sensors = append(p.sensors, sensor)
+			}
+		}
+	}
+	return p.sensors
 }
 
 // String implements stringer

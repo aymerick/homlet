@@ -21,15 +21,36 @@ type Handler struct {
 
 // Push sends packet to domoticz
 func (h *Handler) Push(packet *homlet.Packet, settings *homlet.DeviceSettings) error {
-	if settings == nil || settings.Domoticz == 0 {
+	for _, sensor := range packet.Sensors() {
+		sensorSettings, err := settings.Sensor(sensor)
+		if err != nil {
+			return err
+		}
+
+		if (sensorSettings == nil) || (sensorSettings.Domoticz == 0) {
+			continue
+		}
+
+		if (sensor == homlet.Humidity) && packet.HaveSensor(homlet.Temperature) {
+			// we send a single command for Temp+Humi sensors
+			continue
+		}
+
+		if err := h.pushCommand(packet, sensor, sensorSettings); err != nil {
+			log.WithError(err).Errorf("Failed to push packet to domoticz for sensor '%s'", sensor.String())
+		}
+	}
+	return nil
+}
+
+func (h *Handler) pushCommand(packet *homlet.Packet, sensor homlet.Sensor, settings *homlet.SensorSettings) error {
+	p := h.params(packet, sensor)
+	if p == "" {
 		return nil
 	}
 
-	if !packet.HaveSensor(homlet.Temperature) && !packet.HaveSensor(homlet.Humidity) {
-		return nil
-	}
-
-	url := fmt.Sprintf("%s/json.htm?type=command&param=udevice&idx=%d&%s", h.URL, settings.Domoticz, h.paramsForPacket(packet))
+	// FIXME ?? send vcc as battery level: https://www.domoticz.com/wiki/Domoticz_API/JSON_URL's#Additional_parameters_.28signal_level_.26_battery_level.29
+	url := fmt.Sprintf("%s/json.htm?type=command&param=udevice&idx=%d&%s", h.URL, settings.Domoticz, p)
 
 	log.Debugf("Pushing to domoticz: %s", url)
 
@@ -51,17 +72,33 @@ func (h *Handler) Push(packet *homlet.Packet, settings *homlet.DeviceSettings) e
 	return nil
 }
 
-func (h *Handler) paramsForPacket(packet *homlet.Packet) string {
-	hasTemp := packet.HaveSensor(homlet.Temperature)
-	hasHumi := packet.HaveSensor(homlet.Humidity)
-
-	if hasTemp && hasHumi {
-		return fmt.Sprintf("nvalue=0&svalue=%.1f;%d;%d", packet.Temperature, packet.Humidity, humidityStatus(packet.HumidityStatus()))
-	} else if hasTemp {
+func (h *Handler) params(packet *homlet.Packet, sensor homlet.Sensor) string {
+	switch sensor {
+	case homlet.Temperature:
+		if packet.HaveSensor(homlet.Humidity) {
+			// https://www.domoticz.com/wiki/Domoticz_API/JSON_URL's#Temperature.2Fhumidity
+			return fmt.Sprintf("nvalue=0&svalue=%.1f;%d;%d", packet.Temperature, packet.Humidity, humidityStatus(packet.HumidityStatus()))
+		}
+		// https://www.domoticz.com/wiki/Domoticz_API/JSON_URL's#Temperature
 		return fmt.Sprintf("nvalue=0&svalue=%.1f", packet.Temperature)
-	} else if hasHumi {
+
+	case homlet.Humidity:
+		// https://www.domoticz.com/wiki/Domoticz_API/JSON_URL's#Humidity
 		return fmt.Sprintf("nvalue=%d&svalue=%d", packet.Humidity, humidityStatus(packet.HumidityStatus()))
+
+	case homlet.Light:
+		// https://www.domoticz.com/wiki/Domoticz_API/JSON_URL's#Percentage
+		return fmt.Sprintf("nvalue=0&svalue=%d", packet.Light)
+
+	case homlet.Motion:
+		// FIXME send to 'text', 'custom' or 'switch' virtual device ?
+		//   https://www.domoticz.com/wiki/Domoticz_API/JSON_URL's#Text_sensor
+		//   https://www.domoticz.com/wiki/Domoticz_API/JSON_URL's#Toggle_a_switch_state_between_on.2Foff
+		//   https://www.domoticz.com/wiki/Domoticz_API/JSON_URL's#Custom_Sensor
+		return ""
 	}
+
+	// unsupported sensor
 	return ""
 }
 
