@@ -22,10 +22,13 @@ fmt: ; $(info $(M) Formatting code)
 lint: ; $(info $(M) Linting)
 	golangci-lint run
 
+tidy: ; $(info $(M) Tidying)
+	go mod tidy
+
 build: clean ; $(info $(M) Building)
 	go build -ldflags "$(shell govvv -flags -pkg $(shell go list ./pkg/version)) -s -w" ./cmd/homlet
 
 rpi: clean ; $(info $(M) Building raspberry pi binary)
 	GOOS=linux GOARCH=arm GOARM=5 go build -ldflags "$(shell govvv -flags -pkg $(shell go list ./pkg/version)) -s -w" ./cmd/homlet
 
-release: gen lint build
+release: gen lint build tidy
