@@ -59,10 +59,13 @@ func (h *Handler) pushCommand(packet *homlet.Packet, sensor homlet.Sensor, setti
 		return nil
 	}
 
-	// FIXME send battery level: https://www.domoticz.com/wiki/Domoticz_API/JSON_URL's#Additional_parameters_.28signal_level_.26_battery_level.29
-	//   VCC: 3800mv => 100% (max allowed voltage) / 2200mv => 0% (min voltage for RF12B chip)
-	//   LowBattery: false => 100% / true => ?% (voltage dropped under 3100mv)
+	// command
 	url := fmt.Sprintf("%s/json.htm?type=command&%s", h.url, p)
+
+	// battery level
+	if bat := h.batteryLevel(packet); bat != "" {
+		url += fmt.Sprintf("&%s", bat)
+	}
 
 	log.Debugf("Pushing to domoticz: %s", url)
 
@@ -82,6 +85,35 @@ func (h *Handler) pushCommand(packet *homlet.Packet, sensor homlet.Sensor, setti
 	}
 
 	return nil
+}
+
+// https://www.domoticz.com/wiki/Domoticz_API/JSON_URL's#Additional_parameters_.28signal_level_.26_battery_level.29
+func (h *Handler) batteryLevel(packet *homlet.Packet) string {
+	if packet.HaveSensor(homlet.VCC) {
+		// NOTE that:
+		//   3800mv is max allowed voltage
+		//   2200mv is min voltage for RF12B chip
+
+		// 3300mv => 100%
+		// 2300mv =>   0%
+		val := (packet.VCC - 2300) / 10
+		if packet.VCC < 2300 {
+			val = 0
+		} else if packet.VCC > 3300 {
+			val = 100
+		}
+		return fmt.Sprintf("battery=%d", val)
+	} else if packet.HaveSensor(homlet.LowBattery) {
+		val := 100
+		if packet.LowBattery {
+			// if LowBattery is true then it means that voltage dropped under 3100mv
+			val = 5 // FIXME arbitrary value
+		}
+		return fmt.Sprintf("battery=%d", val)
+	}
+
+	// not supported
+	return ""
 }
 
 func (h *Handler) params(packet *homlet.Packet, sensor homlet.Sensor, deviceID int) string {
