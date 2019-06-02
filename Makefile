@@ -4,7 +4,7 @@ all: build
 
 dep: ; $(info $(M) Ensuring dependencies)
 	go get github.com/ahmetb/govvv
-	go get github.com/GJRTimmer/enumer
+	go get github.com/dmarkham/enumer@v1.0.0
 	GO111MODULE=on go get github.com/golangci/golangci-lint/cmd/golangci-lint@v1.15.0
 
 gen: ; $(info $(M) Generating files)
