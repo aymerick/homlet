@@ -15,8 +15,18 @@ import (
 
 // Handler represents a domoticz handler
 type Handler struct {
-	HardwareId int
-	URL        string
+	hdwID   int
+	motions map[int]bool
+	url     string
+}
+
+// New instanciates a new domoticz handler
+func New(hdwID int, url string) *Handler {
+	return &Handler{
+		hdwID:   hdwID,
+		motions: map[int]bool{},
+		url:     url,
+	}
 }
 
 // Push sends packet to domoticz
@@ -49,8 +59,10 @@ func (h *Handler) pushCommand(packet *homlet.Packet, sensor homlet.Sensor, setti
 		return nil
 	}
 
-	// FIXME ?? send vcc as battery level: https://www.domoticz.com/wiki/Domoticz_API/JSON_URL's#Additional_parameters_.28signal_level_.26_battery_level.29
-	url := fmt.Sprintf("%s/json.htm?type=command&%s", h.URL, p)
+	// FIXME send battery level: https://www.domoticz.com/wiki/Domoticz_API/JSON_URL's#Additional_parameters_.28signal_level_.26_battery_level.29
+	//   VCC: 3800mv => 100% (max allowed voltage) / 2200mv => 0% (min voltage for RF12B chip)
+	//   LowBattery: false => 100% / true => ?% (voltage dropped under 3100mv)
+	url := fmt.Sprintf("%s/json.htm?type=command&%s", h.url, p)
 
 	log.Debugf("Pushing to domoticz: %s", url)
 
@@ -91,12 +103,22 @@ func (h *Handler) params(packet *homlet.Packet, sensor homlet.Sensor, deviceID i
 		return fmt.Sprintf("param=udevice&idx=%d&nvalue=0&svalue=%d", deviceID, packet.Light)
 
 	case homlet.Motion:
-		// https://www.domoticz.com/wiki/Domoticz_API/JSON_URL's#Turn_a_light.2Fswitch_on
-		cmd := "Off"
-		if packet.Motion {
-			cmd = "On"
+		prev, alreadySent := h.motions[packet.DeviceID]
+
+		// send to domoticz only if state changed
+		if !alreadySent || (packet.Motion != prev) {
+			// https://www.domoticz.com/wiki/Domoticz_API/JSON_URL's#Turn_a_light.2Fswitch_on
+			cmd := "Off"
+			if packet.Motion {
+				cmd = "On"
+			}
+
+			h.motions[packet.DeviceID] = packet.Motion
+			return fmt.Sprintf("param=switchlight&idx=%d&switchcmd=%s", deviceID, cmd)
 		}
-		return fmt.Sprintf("param=switchlight&idx=%d&switchcmd=%s", deviceID, cmd)
+
+		// state did not changed
+		return ""
 	}
 
 	// unsupported sensor

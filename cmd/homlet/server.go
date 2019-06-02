@@ -40,10 +40,8 @@ func runServer(cmd *cobra.Command, args []string) {
 	server := server.New(packets, settings)
 
 	if url := viper.GetString("domoticz.url"); url != "" {
-		server.SetDomoticz(&domoticz.Handler{
-			HardwareId: viper.GetInt("domoticz.hardwareId"),
-			URL:        url,
-		})
+		handler := domoticz.New(viper.GetInt("domoticz.hardwareId"), url)
+		server.SetDomoticz(handler)
 	}
 
 	// run server
