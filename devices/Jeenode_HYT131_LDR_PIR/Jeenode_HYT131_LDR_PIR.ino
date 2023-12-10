@@ -2,12 +2,13 @@
 // Homlet Device
 //
 // Jeenode with sensors:
-//  - SHT11 for temperature and humidity
+//  - HYT131 for temperature and humidity
 //  - LDR for light
 //  - PIR for motion
 //
 // References:
 //  - Room board: http://jeelabs.com/products/room-board
+//  - HYT131: https://jeelabs.org/2012/06/30/new-hyt131-sensor/index.html
 //  - Original sketch: https://github.com/jcw/jeelib/blob/master/examples/RF12/roomNode/roomNode.ino
 //
 
@@ -26,8 +27,8 @@ ISR(WDT_vect) { Sleepy::watchdogEvent(); }
 // Device kind
 #define DEVICE_KIND 1
 
-// defined if SHT11 is connected to a port
-#define SHT11_PORT 1
+// defined if HYT131 is connected to a port
+#define HYT131_PORT 1
 
 // defined if LDR is connected to a port's AIO pin
 #define LDR_PORT 4
@@ -121,7 +122,8 @@ class PIR : public Port {
 
 // sensors
 PIR sensorPIR (PIR_PORT);
-SHT11 sensorSHT11 (SHT11_PORT);
+PortI2C hyti2cport (HYT131_PORT); // FIXME rename
+HYT131 sensorHYT131 (hyti2cport); // FIXME rename
 Port sensorLDR (LDR_PORT);
 
 // the PIR signal comes in via a pin-change interrupt
@@ -241,29 +243,19 @@ void readLowBat() {
   payload.lowbat = rf12_lowbat();
 }
 
-// spend a little time in power down mode while the SHT11 does a measurement
-static void shtDelay () {
-  // must wait at least 20 ms
-  Sleepy::loseSomeTime(32);
-}
-
 // read temperature and humidity
-void readSHT11() {
-  sensorSHT11.measure(SHT11::HUMI, shtDelay);
-  sensorSHT11.measure(SHT11::TEMP, shtDelay);
-
-  float h, t;
-  sensorSHT11.calculate(h, t);
-
-  payload.humi = h + 0.5;
-  payload.temp = 10 * t + 0.5;
+void readHYT131() {
+  int humi, temp;
+  sensorHYT131.reading(temp, humi);
+  payload.humi = humi/10;
+  payload.temp = temp;
 }
 
 // readout all the sensors and other values
 static void readSensors() {
   readLDR();
   readLowBat();
-  readSHT11();
+  readHYT131();
 
   payload.motion = sensorPIR.state();
 }
@@ -314,8 +306,9 @@ void loop() {
     payload.motion = sensorPIR.state();
 
 #if DEBUG
-    Serial.print("PIR ");
+    Serial.print("PIR: ");
     Serial.print((int) payload.motion);
+    Serial.print(" ");
     serialFlush();
 #endif
 

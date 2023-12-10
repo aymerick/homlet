@@ -24,7 +24,7 @@ References
 TinyTX
 ======
 
-TinyTX design by Nathan Chantrell: <http://nathan.chantrell.net/tinytx-wireless-sensor>
+TinyTX design by Nathan Chantrell: <https://web.archive.org/web/20200925223440/https://nathan.chantrell.net/tinytx-wireless-sensor/>
 
 Setup
 -----
